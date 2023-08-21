@@ -3,6 +3,7 @@ package sitemaker
 import (
 	"errors"
 	"fmt"
+	"os"
 )
 
 func RunCommand(cmd string, args []string) error {
@@ -26,21 +27,33 @@ func RunCommand(cmd string, args []string) error {
 	return nil
 }
 
-func createNewProject(args []string) error {
+func createNewProject(args []string) (err error) {
 
-	// source dir must contain:
-	//  layouts:
-	//  		- homelayout.html
-	// 		- detailslayout.html
-	//  components:
-	// 		- image.html
-	// 		- project-item.html
-	// 		- contact-form.html
+	if len(args) != 1 {
+		return errors.New("new command accepts 1 argument")
+	}
 
-	//  data:
-	//   	- homepage.yml
-	//   	- projcets.yml
-	//   	- about.yml`
+	projectDir := args[0]
+
+	layouts := projectDir + "/layouts"
+	components := projectDir + "/components"
+	data := projectDir + "/data"
+
+	err = os.MkdirAll(layouts, 0755)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(components, 0755)
+
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(data, 0755)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
