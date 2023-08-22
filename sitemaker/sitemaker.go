@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func RunCommand(cmd string, args []string) error {
@@ -59,6 +61,27 @@ func createNewProject(args []string) (err error) {
 }
 
 func generateProject(args []string) error {
+
+	if len(args) < 2 {
+		return errors.New("gen command invalid arguments")
+	}
+
+	data, assets, err := loadSourceFiles(args[0])
+
+	// TODO: convert data files to html
+	for k, v := range data {
+		fmt.Println(k, v)
+	}
+
+	// TODO: move assets to output folder
+	for k, v := range assets {
+		fmt.Println(k, v)
+	}
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -73,4 +96,38 @@ Commands:
 		Prints all available commands`
 
 	fmt.Println(help)
+}
+
+func loadSourceFiles(source string) (map[string]string, map[string][]byte, error) {
+	data := make(map[string]string)
+	assets := make(map[string][]byte)
+
+	err := filepath.Walk(source, func(fpath string, info os.FileInfo, err error) error {
+
+		if !info.IsDir() {
+			b, err := os.ReadFile(fpath)
+
+			if err != nil {
+				return err
+			}
+
+			// avoid files with . prefix
+			if !strings.HasPrefix(fpath, ".") &&
+				!strings.Contains(fpath, "/.") {
+				if strings.HasSuffix(fpath, ".txt") {
+					data[fpath] = string(b)
+				} else {
+					assets[fpath] = b
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return data, assets, err
 }
