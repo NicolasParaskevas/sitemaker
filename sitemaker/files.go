@@ -6,9 +6,35 @@ import (
 	"strings"
 )
 
-func loadSourceFiles(source string) (map[string]string, map[string][]byte, error) {
+type Filetype int
+
+const (
+	DATA Filetype = iota
+	ASSET
+)
+
+func loadSourceFiles(source string) (map[string]string, error) {
+	d, err := load(source, DATA)
+
+	if err != nil {
+		return nil, err
+	}
+
 	data := make(map[string]string)
-	assets := make(map[string][]byte)
+
+	for k, v := range d {
+		data[k] = string(v)
+	}
+
+	return data, err
+}
+
+func loadAssetFiles(source string) (map[string][]byte, error) {
+	return load(source, ASSET)
+}
+
+func load(source string, ft Filetype) (map[string][]byte, error) {
+	result := make(map[string][]byte)
 
 	err := filepath.Walk(source, func(fpath string, info os.FileInfo, err error) error {
 
@@ -19,13 +45,13 @@ func loadSourceFiles(source string) (map[string]string, map[string][]byte, error
 				return err
 			}
 
-			// avoid files with . prefix
-			if !strings.HasPrefix(fpath, ".") &&
-				!strings.Contains(fpath, "/.") {
-				if strings.HasSuffix(fpath, ".txt") {
-					data[fpath] = string(b)
-				} else {
-					assets[fpath] = b
+			if !strings.HasPrefix(fpath, ".") && !strings.Contains(fpath, "/.") {
+				if ft == DATA && strings.HasSuffix(fpath, ".txt") {
+					result[fpath] = b
+				}
+
+				if ft == ASSET && !strings.HasSuffix(fpath, ".txt") {
+					result[fpath] = b
 				}
 			}
 		}
@@ -34,8 +60,8 @@ func loadSourceFiles(source string) (map[string]string, map[string][]byte, error
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return data, assets, err
+	return result, err
 }

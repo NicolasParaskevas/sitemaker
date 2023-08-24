@@ -64,7 +64,17 @@ func generateProject(args []string) error {
 		return errors.New("gen command invalid arguments")
 	}
 
-	data, assets, err := loadSourceFiles(args[0])
+	data, err := loadSourceFiles(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	assets, err := loadAssetFiles(args[0])
+
+	if err != nil {
+		return err
+	}
 
 	// TODO: convert data files to html
 	for k, v := range data {
@@ -74,10 +84,6 @@ func generateProject(args []string) error {
 	// TODO: move assets to output folder
 	for k, v := range assets {
 		fmt.Println(k, v)
-	}
-
-	if err != nil {
-		return err
 	}
 
 	return nil
