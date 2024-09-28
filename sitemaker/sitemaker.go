@@ -102,47 +102,50 @@ func generateProject(sourceDir, outputDir string) error {
 		var page Page
 		err := xml.Unmarshal([]byte(v), &page)
 		if err != nil {
-			log.Fatalf("Error unmarshaling XML: %v", err)
+			log.Printf("Error unmarshaling XML: %v", err)
+			continue
 		}
 
 		// add source directory in the front
-		page.Layout = sourceDir + "/" + page.Layout
-		page.View = sourceDir + "/" + page.View
+		page.Layout = filepath.Join(sourceDir, page.Layout)
+		page.View = filepath.Join(sourceDir, page.View)
 
 		// Parse templates
 		tmpl, err := template.ParseFiles(page.Layout, page.View)
 		if err != nil {
-			log.Fatalf("Error parsing templates: %v", err)
+			log.Printf("Error parsing templates: %v", err)
+			continue
 		}
 
 		fname := filepath.Base(k)
 		if fname == "." {
-			log.Fatal("Error parsing filepath")
+			log.Printf("Error parsing filepath")
+			continue
 		}
 
 		// convert .xml to .html
 		fname = strings.TrimSuffix(fname, filepath.Ext(fname)) + ".html"
 
 		// Add output directory
-		fname = outputDir + fname
+		outputFilePath := filepath.Join(outputDir, fname)
 
-		outputFile, err := os.Create(fname)
+		outputFile, err := os.Create(outputFilePath)
 
 		if err != nil {
-			log.Fatalf("Error creating output file: %v", err)
+			log.Printf("Error creating output file: %v", err)
+			continue
 		}
 
 		defer outputFile.Close()
 
-		fmt.Println(page)
-
-		err = tmpl.ExecuteTemplate(outputFile, fname, page)
+		err = tmpl.ExecuteTemplate(outputFile, filepath.Base(page.Layout), page)
 
 		if err != nil {
-			log.Fatalf("Error executing template: %v", err)
+			log.Printf("Error executing template: %v", err)
+			continue
 		}
 
-		fmt.Println(k, v)
+		fmt.Println("Generated:", outputFilePath)
 	}
 
 	// TODO: move assets to output folder
