@@ -127,11 +127,12 @@ func generateProject(sourceDir, outputDir string) error {
 		fname = outputDir + fname
 
 		outputFile, err := os.Create(fname)
-		defer outputFile.Close()
 
 		if err != nil {
 			log.Fatalf("Error creating output file: %v", err)
 		}
+
+		defer outputFile.Close()
 
 		fmt.Println(page)
 
