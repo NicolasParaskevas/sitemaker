@@ -1,20 +1,50 @@
 package sitemaker
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
 )
+
+type Page struct {
+	Layout  string        `xml:"layout"`
+	View    string        `xml:"view"`
+	Content []ContentItem `xml:"content"`
+}
+
+type ContentItem struct {
+	XMLName xml.Name
+	Value   string `xml:",chardata"`
+}
 
 func RunCommand(cmd string, args []string) error {
 	switch cmd {
 	case "new":
-		err := createNewProject(args)
+
+		if len(args) != 1 {
+			return errors.New("new command accepts 1 argument")
+		}
+
+		projectDir := args[0]
+
+		err := createNewProject(projectDir)
 		if err != nil {
 			return err
 		}
 	case "gen":
-		err := generateProject(args)
+		if len(args) < 2 {
+			return errors.New("gen command invalid arguments")
+		}
+
+		sourceDir := args[0]
+		outputDir := args[1]
+
+		err := generateProject(sourceDir, outputDir)
 		if err != nil {
 			return err
 		}
@@ -27,23 +57,19 @@ func RunCommand(cmd string, args []string) error {
 	return nil
 }
 
-func createNewProject(args []string) (err error) {
-
-	if len(args) != 1 {
-		return errors.New("new command accepts 1 argument")
-	}
-
-	projectDir := args[0]
+func createNewProject(projectDir string) (err error) {
 
 	layouts := projectDir + "/layouts"
-	components := projectDir + "/components"
+	views := projectDir + "/views"
 	data := projectDir + "/data"
 
 	err = os.MkdirAll(layouts, 0755)
+
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(components, 0755)
+
+	err = os.MkdirAll(views, 0755)
 
 	if err != nil {
 		return err
@@ -58,26 +84,63 @@ func createNewProject(args []string) (err error) {
 	return nil
 }
 
-func generateProject(args []string) error {
+func generateProject(sourceDir, outputDir string) error {
 
-	if len(args) < 2 {
-		return errors.New("gen command invalid arguments")
-	}
-
-	data, err := loadSourceFiles(args[0])
+	data, err := loadSourceFiles(sourceDir)
 
 	if err != nil {
 		return err
 	}
 
-	assets, err := loadAssetFiles(args[0])
+	assets, err := loadAssetFiles(sourceDir)
 
 	if err != nil {
 		return err
 	}
 
-	// TODO: convert data files to html
 	for k, v := range data {
+		var page Page
+		err := xml.Unmarshal([]byte(v), &page)
+		if err != nil {
+			log.Fatalf("Error unmarshaling XML: %v", err)
+		}
+
+		// add source directory in the front
+		page.Layout = sourceDir + "/" + page.Layout
+		page.View = sourceDir + "/" + page.View
+
+		// Parse templates
+		tmpl, err := template.ParseFiles(page.Layout, page.View)
+		if err != nil {
+			log.Fatalf("Error parsing templates: %v", err)
+		}
+
+		fname := filepath.Base(k)
+		if fname == "." {
+			log.Fatal("Error parsing filepath")
+		}
+
+		// convert .xml to .html
+		fname = strings.TrimSuffix(fname, filepath.Ext(fname)) + ".html"
+
+		// Add output directory
+		fname = outputDir + fname
+
+		outputFile, err := os.Create(fname)
+		if err != nil {
+			log.Fatalf("Error creating output file: %v", err)
+		}
+
+		defer outputFile.Close()
+
+		fmt.Println(page)
+
+		err = tmpl.ExecuteTemplate(outputFile, fname, page)
+
+		if err != nil {
+			log.Fatalf("Error executing template: %v", err)
+		}
+
 		fmt.Println(k, v)
 	}
 
