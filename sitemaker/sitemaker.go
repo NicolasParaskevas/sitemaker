@@ -59,9 +59,9 @@ func RunCommand(cmd string, args []string) error {
 
 func createNewProject(projectDir string) (err error) {
 
-	layouts := projectDir + "/layouts"
-	views := projectDir + "/views"
-	data := projectDir + "/data"
+	layouts := filepath.Join(projectDir, "layouts")
+	views := filepath.Join(projectDir, "views")
+	data := filepath.Join(projectDir, "data")
 
 	err = os.MkdirAll(layouts, 0755)
 
