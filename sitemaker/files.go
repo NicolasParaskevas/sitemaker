@@ -46,11 +46,11 @@ func load(source string, ft Filetype) (map[string][]byte, error) {
 			}
 
 			if !strings.HasPrefix(fpath, ".") && !strings.Contains(fpath, "/.") {
-				if ft == DATA && strings.HasSuffix(fpath, ".txt") {
+				if ft == DATA && strings.HasSuffix(fpath, ".xml") {
 					result[fpath] = b
 				}
 
-				if ft == ASSET && !strings.HasSuffix(fpath, ".txt") {
+				if ft == ASSET && !strings.HasSuffix(fpath, ".xml") {
 					result[fpath] = b
 				}
 			}
