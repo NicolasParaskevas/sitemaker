@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 
@@ -16,10 +18,58 @@ func main() {
 	command := os.Args[1] // first argument is the command
 	args := os.Args[2:]   // the rest are the command arguments
 
-	err := sitemaker.RunCommand(command, args)
+	err := runCommand(command, args)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
+}
+
+func runCommand(cmd string, args []string) error {
+	switch cmd {
+	case "new":
+
+		if len(args) != 1 {
+			return errors.New("new command accepts 1 argument")
+		}
+
+		projectDir := args[0]
+
+		err := sitemaker.CreateNewProject(projectDir)
+		if err != nil {
+			return err
+		}
+	case "gen":
+		if len(args) < 2 {
+			return errors.New("gen command invalid arguments")
+		}
+
+		sourceDir := args[0]
+		outputDir := args[1]
+
+		err := sitemaker.GenerateProject(sourceDir, outputDir)
+		if err != nil {
+			return err
+		}
+	case "help":
+		printHelp()
+	default:
+		return errors.New("invalid command: " + cmd)
+	}
+
+	return nil
+}
+
+func printHelp() {
+	help := `Usage sitemaker [command] [argument]
+Commands:
+	-> gen [source dir] [output dir]
+	 	Generates site on the output directory basted on the source dir
+	-> new [source dir]
+	 	Creates new project structure
+	-> help
+		Prints all available commands`
+
+	fmt.Println(help)
 }

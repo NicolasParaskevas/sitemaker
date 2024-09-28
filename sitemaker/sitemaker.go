@@ -2,7 +2,6 @@ package sitemaker
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -18,42 +17,7 @@ type Page struct {
 	Content map[string]interface{}
 }
 
-func RunCommand(cmd string, args []string) error {
-	switch cmd {
-	case "new":
-
-		if len(args) != 1 {
-			return errors.New("new command accepts 1 argument")
-		}
-
-		projectDir := args[0]
-
-		err := createNewProject(projectDir)
-		if err != nil {
-			return err
-		}
-	case "gen":
-		if len(args) < 2 {
-			return errors.New("gen command invalid arguments")
-		}
-
-		sourceDir := args[0]
-		outputDir := args[1]
-
-		err := generateProject(sourceDir, outputDir)
-		if err != nil {
-			return err
-		}
-	case "help":
-		printHelp()
-	default:
-		return errors.New("invalid command: " + cmd)
-	}
-
-	return nil
-}
-
-func createNewProject(projectDir string) (err error) {
+func CreateNewProject(projectDir string) (err error) {
 
 	layouts := filepath.Join(projectDir, "layouts")
 	views := filepath.Join(projectDir, "views")
@@ -80,7 +44,7 @@ func createNewProject(projectDir string) (err error) {
 	return nil
 }
 
-func generateProject(sourceDir, outputDir string) error {
+func GenerateProject(sourceDir, outputDir string) error {
 	data, err := loadSourceFiles(sourceDir)
 	if err != nil {
 		return err
@@ -202,17 +166,4 @@ func generateProject(sourceDir, outputDir string) error {
 	}
 
 	return nil
-}
-
-func printHelp() {
-	help := `Usage sitemaker [command] [argument]
-Commands:
-	-> gen [source dir] [output dir]
-	 	Generates site on the output directory basted on the source dir
-	-> new [source dir]
-	 	Creates new project structure
-	-> help
-		Prints all available commands`
-
-	fmt.Println(help)
 }
