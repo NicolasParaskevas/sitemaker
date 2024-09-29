@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ func CreateNewProject(projectDir string) (err error) {
 	layouts := filepath.Join(projectDir, "layouts")
 	views := filepath.Join(projectDir, "views")
 	data := filepath.Join(projectDir, "data")
+	assets := filepath.Join(projectDir, "assets")
 
 	err = os.MkdirAll(layouts, 0755)
 
@@ -36,6 +38,12 @@ func CreateNewProject(projectDir string) (err error) {
 	}
 
 	err = os.MkdirAll(data, 0755)
+
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(assets, 0755)
 
 	if err != nil {
 		return err
@@ -160,9 +168,15 @@ func GenerateProject(sourceDir, outputDir string) error {
 		fmt.Println("Generated:", outputFilePath)
 	}
 
-	// TODO: move assets to output folder
+	// Create asset files
 	for k, v := range assets {
-		fmt.Println(k, v)
+		assetDir := strings.Replace(k, sourceDir, outputDir, 1)
+		fmt.Println("Generated:", assetDir)
+		makeDirs(assetDir, 0755)
+		err = ioutil.WriteFile(assetDir, v, 0755)
+		if err != nil {
+			log.Printf("Error writing asset file: %v", err)
+		}
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package sitemaker
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -30,7 +31,8 @@ func loadSourceFiles(source string) (map[string]string, error) {
 }
 
 func loadAssetFiles(source string) (map[string][]byte, error) {
-	return load(source, ASSET)
+	assetDir := filepath.Join(source, "assets")
+	return load(assetDir, ASSET)
 }
 
 func load(source string, ft Filetype) (map[string][]byte, error) {
@@ -64,4 +66,13 @@ func load(source string, ft Filetype) (map[string][]byte, error) {
 	}
 
 	return result, err
+}
+
+func makeDirs(filename string, mode os.FileMode) error {
+	baseDir := path.Dir(filename)
+	info, err := os.Stat(baseDir)
+	if err == nil && info.IsDir() {
+		return nil
+	}
+	return os.MkdirAll(baseDir, mode)
 }
