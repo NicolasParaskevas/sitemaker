@@ -65,7 +65,7 @@ func GenerateProject(sourceDir, outputDir string) error {
 
 	for k, v := range data {
 		var page Page
-
+		fmt.Println("source file:", k)
 		// Unmarshal the layout and view sections (static)
 		err := xml.Unmarshal([]byte(v), &page)
 		if err != nil {
@@ -140,19 +140,18 @@ func GenerateProject(sourceDir, outputDir string) error {
 			continue
 		}
 
-		fname := filepath.Base(k)
-		if fname == "." {
-			log.Println("Error parsing filepath")
-			continue
-		}
+		// this is the directory of the data files
+		// we need to rename the source_dir/data directory
+		// to be the root of the output directory
+		dataDir := filepath.Join(sourceDir, "data")
+
+		outputfile := strings.Replace(k, dataDir, outputDir, 1)
+		makeDirs(outputfile, 0755)
 
 		// Convert .xml to .html
-		fname = strings.TrimSuffix(fname, filepath.Ext(fname)) + ".html"
+		outputfile = strings.TrimSuffix(outputfile, filepath.Ext(outputfile)) + ".html"
 
-		// Add output directory
-		outputFilePath := filepath.Join(outputDir, fname)
-
-		outputFile, err := os.Create(outputFilePath)
+		outputFile, err := os.Create(outputfile)
 		if err != nil {
 			log.Printf("Error creating output file: %v", err)
 			continue
@@ -165,7 +164,7 @@ func GenerateProject(sourceDir, outputDir string) error {
 			continue
 		}
 
-		fmt.Println("Generated:", outputFilePath)
+		fmt.Println("Generated:", outputfile)
 	}
 
 	// Create asset files
