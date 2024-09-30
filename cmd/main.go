@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/nicolasparaskevas/sitemaker/sitemaker"
 )
@@ -45,8 +46,8 @@ func runCommand(cmd string, args []string) error {
 			return errors.New("gen command invalid arguments")
 		}
 
-		sourceDir := args[0]
-		outputDir := args[1]
+		sourceDir := filepath.Clean(args[0])
+		outputDir := filepath.Clean(args[1])
 
 		err := sitemaker.GenerateProject(sourceDir, outputDir)
 		if err != nil {
